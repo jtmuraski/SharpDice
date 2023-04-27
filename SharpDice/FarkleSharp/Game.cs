@@ -54,15 +54,19 @@ namespace FarkleSharp
                 var currentPlayer = farkleGame.Players.Single(p => p.TurnOrderNbr == currentPlayerTurn);
                 // ---Game Layout---
                 var layout = new Layout("Root")
-                                       .SplitColumns(
-                                          new Layout("Left"),
-                                          new Layout("Right").SplitRows(new Layout("Top"),
-                                                                        new Layout("Bottom")));
-                layout["Right"]["Top"].Update(new Panel(
+                                .SplitRows(
+                                          new Layout("Top").SplitColumns(new Layout("Left").MinimumSize(8),
+                                                                        new Layout("Right")).MinimumSize(8),
+                                          new Layout("DiceRoll"));
+                layout["Top"]["Left"].Update(new Panel(
                                                     Align.Left(new Markup($"[green]Current Player: {currentPlayer.Name}[/]"),
-                                                              VerticalAlignment.Top))
-                                                    .Expand());
+                                                    VerticalAlignment.Top)));
+
+                layout["Top"]["Right"].Update(DrawBottomRightPanel(farkleGame));
+
+                layout["DiceRoll"].Update(new Panel(GameServices.DrawDice(1)).Expand());
                 AnsiConsole.Write(layout);
+                var answer = AnsiConsole.Ask<int>("Roll the dice?");
                 Console.Read();
             } while (!gameIsWon);
             return;
@@ -76,5 +80,20 @@ namespace FarkleSharp
             Console.ReadLine();
             return;
         }
+
+        private static Panel DrawBottomRightPanel(FarkleGame farkelGame)
+        {
+            var table = new Table();
+            table.AddColumn("Player");
+            table.AddColumn("Score");
+            foreach(var player in farkelGame.Players)
+            {
+                table.AddRow(player.Name, player.Score.ToString());
+            }
+           return new Panel(Align.Center(table, VerticalAlignment.Top)).Header("Current Scores");
+
+        }
+
+        
     }
 }
